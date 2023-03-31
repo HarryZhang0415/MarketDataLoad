@@ -3,6 +3,11 @@ import mysql.connector
 import requests
 import pandas as pd
 import datetime
+import io
+
+#TO-DO: 
+# 1. Testing each function
+# 2. For return type as csv, test our function to make sure it will not error out.
 
 class AlphaVantage(object):
 
@@ -31,11 +36,8 @@ class AlphaVantage(object):
         url += '&{key}={value}'.format(key='apikey', value=self.api_key)
         
         if pandas_return:
-            with requests.Session() as s:
-                download = s.get(url)
-                decoded_content = download.content.decode('utf-8').splitlines()
-                tmp_list = [row.split(',') for row in decoded_content]
-                data = pd.DataFrame(tmp_list[1:], columns = tmp_list[0])
+            r = requests.get(url)
+            data = pd.read_csv(io.StringIO(r.content.decode('utf-8')))
         else:
             r = requests.get(url)
             data = r.json()
@@ -330,7 +332,7 @@ class AlphaVantage(object):
 #################################   Alpha Intelligence   #############################################
 ######################################################################################################
 
-    def Market_News_Sentiment(self, tickers, topics, time_from, time_to, sort='LATEST', limit='50'):
+    def Market_News_Sentiment(self, tickers, topics, time_from=None, time_to=None, sort='LATEST', limit='50'): ## Error Out
         '''
         API Parameters
         ❚ Required: function
@@ -370,4 +372,128 @@ class AlphaVantage(object):
             If you are looking for an even higher output limit, please contact support@alphavantage.co to have your limit boosted.
         '''
 
-        return self._alphaVantage_api_call('NEWS_SENTIMENT', tickers=tickers, topics=topics, time_from=time_from, time_to=time_to, sort=sort, limit=limit)
+        return self._alphaVantage_api_call('NEWS_SENTIMENT', False, tickers=tickers, topics=topics, time_from=time_from, time_to=time_to, sort=sort, limit=limit)
+    
+######################################################################################################
+#################################  Economic Indicators  ##############################################
+######################################################################################################
+
+    def Real_GDP(self, interval='annual', datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=REAL_GDP
+        ❚ Optional: interval
+            By default, interval=annual. Strings quarterly and annual are accepted.
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('REAL_GDP', datatype=='csv', interval=interval, datatype=datatype)
+  
+    def Real_GDP_per_Capita(self, datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=REAL_GDP_PER_CAPITA
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('REAL_GDP_PER_CAPITA', datatype=='csv', datatype=datatype)
+
+    def Treasury_Yield(self, interval='monthly', maturity='10year', datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=TREASURY_YIELD
+        ❚ Optional: interval
+            By default, interval=monthly. Strings daily, weekly, and monthly are accepted.
+        ❚ Optional: maturity
+            By default, maturity=10year. Strings 3month, 2year, 5year, 7year, 10year, and 30year are accepted.
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('TREASURY_YIELD', datatype=='csv',  interval=interval, maturity=maturity, datatype=datatype)
+    
+    def Federal_Funds_Rate(self, interval='monthly', datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=FEDERAL_FUNDS_RATE
+        ❚ Optional: interval
+            By default, interval=monthly. Strings daily, weekly, and monthly are accepted.
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('FEDERAL_FUNDS_RATE', datatype=='csv',  interval=interval, datatype=datatype)
+    
+    def CPI(self, interval='monthly', datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=CPI
+        ❚ Optional: interval
+            By default, interval=monthly. Strings monthly and semiannual are accepted.
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('CPI', datatype=='csv',  interval=interval, datatype=datatype)
+    
+    def Inflation(self, datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=INFLATION
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('INFLATION', datatype=='csv',  datatype=datatype)
+    
+    def Retail_Sales(self, datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=RETAIL_SALES
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('RETAIL_SALES', datatype=='csv',  datatype=datatype)
+    
+    def Durables(self, datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=DURABLES
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('DURABLES', datatype=='csv',  datatype=datatype)
+    
+    def Unemployment(self, datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=UNEMPLOYMENT
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('UNEMPLOYMENT', datatype=='csv',  datatype=datatype)
+    
+    def Nonfarm_Payroll(self, datatype='json'):
+        '''
+        API Parameters
+        ❚ Required: function
+            The function of your choice. In this case, function=NONFARM_PAYROLL
+        ❚ Optional: datatype
+            By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+        '''
+
+        return self._alphaVantage_api_call('NONFARM_PAYROLL', datatype=='csv',  datatype=datatype)
