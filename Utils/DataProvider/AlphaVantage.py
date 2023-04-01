@@ -14,7 +14,7 @@ class AlphaVantage(object):
     def __init__(self) -> None:
         cnx = mysql.connector.connect(**mysql_config)
         cursor = cnx.cursor()
-        cursor.execute(api_key_sql, [AlphaVantage.__name__])
+        cursor.execute(api_key_sql, [AlphaVantage.__name__, AlphaVantage.__name__])
 
         for _ in cursor:
             self.api_key = _[0]

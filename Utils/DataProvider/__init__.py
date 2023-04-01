@@ -6,4 +6,4 @@ mysql_config = {
   'raise_on_warnings': True
 }
 
-api_key_sql = 'SELECT API_Key FROM dataprovider WHERE ProviderName = %s'
+api_key_sql = 'SELECT API_Key FROM dataprovider WHERE ProviderName = %s or ProviderAbbrev = %s'
