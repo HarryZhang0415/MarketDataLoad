@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 import datetime
 import io
+import time
 
 #TO-DO: 
 # 1. Testing each function
@@ -12,6 +13,10 @@ import io
 class AlphaVantage(object):
 
     def __init__(self) -> None:
+        
+        self.api_key = None
+        self.max_try = 5
+
         cnx = mysql.connector.connect(**mysql_config)
         cursor = cnx.cursor()
         cursor.execute(api_key_sql, [AlphaVantage.__name__, AlphaVantage.__name__])
@@ -26,7 +31,7 @@ class AlphaVantage(object):
         except:
             print("AlphaVantage Connection Failed")
 
-    def _alphaVantage_api_call(self, fn, pandas_return=False,**kvarg):
+    def _endpoint_wrapper(self, fn, pandas_return=False, **kvarg):
         url = 'https://www.alphavantage.co/query?function={functionName}'.format(functionName=fn)
 
         for key in kvarg.keys():
@@ -34,15 +39,36 @@ class AlphaVantage(object):
             url += '&{key}={value}'.format(key=key, value=kvarg[key])
         
         url += '&{key}={value}'.format(key='apikey', value=self.api_key)
-        
-        if pandas_return:
-            r = requests.get(url)
-            data = pd.read_csv(io.StringIO(r.content.decode('utf-8')))
-        else:
-            r = requests.get(url)
-            data = r.json()
 
+        response = self._alphaVantage_api_call(url, self.max_try)
+
+        if pandas_return:
+            data = pd.read_csv(io.StringIO(response.content.decode('utf-8')))
+        else:
+            data = response.json()
+        
         return data
+
+    def _validate_response(self, r):
+        if r.status_code != 200:
+            raise Exception("Error Status Code {status_code}: {Content}".format(r.status_code, r.content))
+        if "Our standard API call frequency is 5 calls per minute and 500 calls per day" in str(r.content):
+            raise Exception("Limit Reached.")
+        if r.content is None:
+            raise Exception("Empty Return")
+
+    def _alphaVantage_api_call(self, url, try_ct=5):
+        if try_ct == 0:
+            return 'Error call tries exceeded'
+
+        try:
+            r = requests.get(url)
+            self._validate_response(r)
+        except:
+            time.sleep(60)
+            r = self._alphaVantage_api_call(url, try_ct=try_ct-1)
+        
+        return r
 
 ######################################################################################################
 #################################  Fundamental Data   ################################################
@@ -57,7 +83,7 @@ class AlphaVantage(object):
             The symbol of the token of your choice. For example: symbol=IBM.
         '''
 
-        return self._alphaVantage_api_call('OVERVIEW', False, symbol=symbol)
+        return self._endpoint_wrapper('OVERVIEW', False, symbol=symbol)
 
     def IncomeStatement(self, symbol):
         '''
@@ -68,7 +94,7 @@ class AlphaVantage(object):
             The symbol of the token of your choice. For example: symbol=IBM.
         '''
 
-        return self._alphaVantage_api_call('INCOME_STATEMENT', pandas_return=False, symbol=symbol)
+        return self._endpoint_wrapper('INCOME_STATEMENT', pandas_return=False, symbol=symbol)
 
     def BalanceSheet(self, symbol):
         '''
@@ -79,7 +105,7 @@ class AlphaVantage(object):
             The symbol of the token of your choice. For example: symbol=IBM.
         '''
 
-        return self._alphaVantage_api_call('BALANCE_SHEET', False, symbol=symbol)
+        return self._endpoint_wrapper('BALANCE_SHEET', False, symbol=symbol)
     
     def CashflowStatement(self, symbol):
         '''
@@ -90,7 +116,7 @@ class AlphaVantage(object):
             The symbol of the token of your choice. For example: symbol=IBM.
         '''
 
-        return self._alphaVantage_api_call('CASH_FLOW', False, symbol=symbol)
+        return self._endpoint_wrapper('CASH_FLOW', False, symbol=symbol)
     
     def ReportedEPS_TimeSeries(self, symbol):
         '''
@@ -100,7 +126,7 @@ class AlphaVantage(object):
             The symbol of the token of your choice. For example: symbol=IBM.
         '''
         
-        return self._alphaVantage_api_call('EARNINGS', False, symbol=symbol)
+        return self._endpoint_wrapper('EARNINGS', False, symbol=symbol)
     
     def ListingStatus(self, date=datetime.date.today(), state='active'):
         '''
@@ -114,7 +140,7 @@ class AlphaVantage(object):
             By default, state=active and the API will return a list of actively traded stocks and ETFs. Set state=delisted to query a list of delisted assets.
         '''
         
-        return self._alphaVantage_api_call('LISTING_STATUS', True, date=date, state=state)
+        return self._endpoint_wrapper('LISTING_STATUS', True, date=date, state=state)
 
     def EarningsCalendar(self, symbol = None, horizon = '3month'):
         '''
@@ -130,7 +156,7 @@ class AlphaVantage(object):
             You may set horizon=6month or horizon=12month to query the earnings scheduled for the next 6 months or 12 months, respectively.
         '''
         
-        return self._alphaVantage_api_call('EARNINGS_CALENDAR', True, symbol=symbol, horizon=horizon)
+        return self._endpoint_wrapper('EARNINGS_CALENDAR', True, symbol=symbol, horizon=horizon)
     
     def IPOCalendar(self):
         '''
@@ -139,7 +165,7 @@ class AlphaVantage(object):
             The API function of your choice. In this case, function=IPO_CALENDAR
         '''
         
-        return self._alphaVantage_api_call('IPO_CALENDAR', True)
+        return self._endpoint_wrapper('IPO_CALENDAR', True)
 
 ######################################################################################################
 #################################   Core Stock APIs   ################################################
@@ -167,7 +193,7 @@ class AlphaVantage(object):
             json returns the intraday time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
         
-        return self._alphaVantage_api_call('TIME_SERIES_INTRADAY', datatype=='csv', symbol=symbol, interval=interval, adjusted=adjusted, outputsize=outputsize, datatype=datatype)
+        return self._endpoint_wrapper('TIME_SERIES_INTRADAY', datatype=='csv', symbol=symbol, interval=interval, adjusted=adjusted, outputsize=outputsize, datatype=datatype)
 
     def Time_Serires_Intraday_Extended(self, symbol, interval, slice='year1month1', adjusted='true'):
         '''
@@ -187,7 +213,7 @@ class AlphaVantage(object):
             By default, adjusted=true and the output time series is adjusted by historical split and dividend events. Set adjusted=false to query raw (as-traded) intraday values.
         '''
 
-        return self._alphaVantage_api_call('TIME_SERIES_INTRADAY_EXTENDED', True, symbol=symbol, interval=interval, slice=slice, adjusted=adjusted)
+        return self._endpoint_wrapper('TIME_SERIES_INTRADAY_EXTENDED', True, symbol=symbol, interval=interval, slice=slice, adjusted=adjusted)
 
     def Time_Serires_Daily(self, symbol, outputsize='compact', datatype='json'):
         '''
@@ -207,7 +233,7 @@ class AlphaVantage(object):
             json returns the daily time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('TIME_SERIES_DAILY', datatype=='csv', symbol=symbol, outputsize=outputsize, datatype=datatype)
+        return self._endpoint_wrapper('TIME_SERIES_DAILY', datatype=='csv', symbol=symbol, outputsize=outputsize, datatype=datatype)
 
     def Time_Serires_Daily_Adjusted(self, symbol, outputsize='compact', datatype='json'):
         '''
@@ -227,7 +253,7 @@ class AlphaVantage(object):
             json returns the daily time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('TIME_SERIES_DAILY_ADJUSTED', datatype=='csv', symbol=symbol, outputsize=outputsize, datatype=datatype)
+        return self._endpoint_wrapper('TIME_SERIES_DAILY_ADJUSTED', datatype=='csv', symbol=symbol, outputsize=outputsize, datatype=datatype)
 
     def Time_Serires_Weekly(self, symbol, datatype='json'):
         '''
@@ -242,7 +268,7 @@ class AlphaVantage(object):
             json returns the weekly time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('TIME_SERIES_WEEKLY', datatype=='csv', symbol=symbol, datatype=datatype)
+        return self._endpoint_wrapper('TIME_SERIES_WEEKLY', datatype=='csv', symbol=symbol, datatype=datatype)
     
     def Time_Serires_Weekly_Adjusted(self, symbol, datatype='json'):
         '''
@@ -257,7 +283,7 @@ class AlphaVantage(object):
             json returns the weekly time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('TIME_SERIES_WEEKLY_ADJUSTED', datatype=='csv', symbol=symbol, datatype=datatype)
+        return self._endpoint_wrapper('TIME_SERIES_WEEKLY_ADJUSTED', datatype=='csv', symbol=symbol, datatype=datatype)
 
     def Time_Serires_Monthly(self, symbol, datatype='json'):
         '''
@@ -272,7 +298,7 @@ class AlphaVantage(object):
             json returns the weekly time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('TIME_SERIES_MONTHLY', datatype=='csv', symbol=symbol, datatype=datatype)
+        return self._endpoint_wrapper('TIME_SERIES_MONTHLY', datatype=='csv', symbol=symbol, datatype=datatype)
     
     def Time_Serires_Monthly_Adjusted(self, symbol, datatype='json'):
         '''
@@ -287,7 +313,7 @@ class AlphaVantage(object):
             json returns the weekly time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('TIME_SERIES_MONTHLY_ADJUSTED', datatype=='csv', symbol=symbol, datatype=datatype)
+        return self._endpoint_wrapper('TIME_SERIES_MONTHLY_ADJUSTED', datatype=='csv', symbol=symbol, datatype=datatype)
     
     def Quote_Endpoint(self, symbol, datatype='json'):
         '''
@@ -302,7 +328,7 @@ class AlphaVantage(object):
             json returns the quote data in JSON format; csv returns the quote data as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('GLOBAL_QUOTE', datatype=='csv', symbol=symbol, datatype=datatype)
+        return self._endpoint_wrapper('GLOBAL_QUOTE', datatype=='csv', symbol=symbol, datatype=datatype)
     
     def Search_Endpoint(self, keywords, datatype='json'):
         '''
@@ -317,7 +343,7 @@ class AlphaVantage(object):
             json returns the search results in JSON format; csv returns the search results as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('SYMBOL_SEARCH', datatype=='csv', keywords=keywords, datatype=datatype)
+        return self._endpoint_wrapper('SYMBOL_SEARCH', datatype=='csv', keywords=keywords, datatype=datatype)
 
     def Market_Status(self):
         '''
@@ -326,7 +352,7 @@ class AlphaVantage(object):
             The API function of your choice. In this case, function=MARKET_STATUS
         '''
 
-        return self._alphaVantage_api_call('MARKET_STATUS')    
+        return self._endpoint_wrapper('MARKET_STATUS')    
 
 ######################################################################################################
 #################################   Alpha Intelligence   #############################################
@@ -372,7 +398,7 @@ class AlphaVantage(object):
             If you are looking for an even higher output limit, please contact support@alphavantage.co to have your limit boosted.
         '''
 
-        return self._alphaVantage_api_call('NEWS_SENTIMENT', False, tickers=tickers, topics=topics, time_from=time_from, time_to=time_to, sort=sort, limit=limit)
+        return self._endpoint_wrapper('NEWS_SENTIMENT', False, tickers=tickers, topics=topics, time_from=time_from, time_to=time_to, sort=sort, limit=limit)
     
 ######################################################################################################
 #################################  Economic Indicators  ##############################################
@@ -389,7 +415,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('REAL_GDP', datatype=='csv', interval=interval, datatype=datatype)
+        return self._endpoint_wrapper('REAL_GDP', datatype=='csv', interval=interval, datatype=datatype)
   
     def Real_GDP_per_Capita(self, datatype='json'):
         '''
@@ -400,7 +426,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('REAL_GDP_PER_CAPITA', datatype=='csv', datatype=datatype)
+        return self._endpoint_wrapper('REAL_GDP_PER_CAPITA', datatype=='csv', datatype=datatype)
 
     def Treasury_Yield(self, interval='monthly', maturity='10year', datatype='json'):
         '''
@@ -415,7 +441,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('TREASURY_YIELD', datatype=='csv',  interval=interval, maturity=maturity, datatype=datatype)
+        return self._endpoint_wrapper('TREASURY_YIELD', datatype=='csv',  interval=interval, maturity=maturity, datatype=datatype)
     
     def Federal_Funds_Rate(self, interval='monthly', datatype='json'):
         '''
@@ -428,7 +454,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('FEDERAL_FUNDS_RATE', datatype=='csv',  interval=interval, datatype=datatype)
+        return self._endpoint_wrapper('FEDERAL_FUNDS_RATE', datatype=='csv',  interval=interval, datatype=datatype)
     
     def CPI(self, interval='monthly', datatype='json'):
         '''
@@ -441,7 +467,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('CPI', datatype=='csv',  interval=interval, datatype=datatype)
+        return self._endpoint_wrapper('CPI', datatype=='csv',  interval=interval, datatype=datatype)
     
     def Inflation(self, datatype='json'):
         '''
@@ -452,7 +478,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('INFLATION', datatype=='csv',  datatype=datatype)
+        return self._endpoint_wrapper('INFLATION', datatype=='csv',  datatype=datatype)
     
     def Retail_Sales(self, datatype='json'):
         '''
@@ -463,7 +489,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('RETAIL_SALES', datatype=='csv',  datatype=datatype)
+        return self._endpoint_wrapper('RETAIL_SALES', datatype=='csv',  datatype=datatype)
     
     def Durables(self, datatype='json'):
         '''
@@ -474,7 +500,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('DURABLES', datatype=='csv',  datatype=datatype)
+        return self._endpoint_wrapper('DURABLES', datatype=='csv',  datatype=datatype)
     
     def Unemployment(self, datatype='json'):
         '''
@@ -485,7 +511,7 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('UNEMPLOYMENT', datatype=='csv',  datatype=datatype)
+        return self._endpoint_wrapper('UNEMPLOYMENT', datatype=='csv',  datatype=datatype)
     
     def Nonfarm_Payroll(self, datatype='json'):
         '''
@@ -496,4 +522,4 @@ class AlphaVantage(object):
             By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
         '''
 
-        return self._alphaVantage_api_call('NONFARM_PAYROLL', datatype=='csv',  datatype=datatype)
+        return self._endpoint_wrapper('NONFARM_PAYROLL', datatype=='csv',  datatype=datatype)
