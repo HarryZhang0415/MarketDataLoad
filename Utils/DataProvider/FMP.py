@@ -80,9 +80,7 @@ class FMP(object):
             fn += '&limit={limit}'.format(limit=limit)
 
         if datatype == 'csv':
-            fn += '&datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8'))).set_index('date').T
+            return pd.DataFrame(self._endpoint_wrapper(fn).json()).set_index(['cik', 'calendarYear', 'period'])
         else:
             return self._endpoint_wrapper(fn).json()
         
@@ -99,9 +97,7 @@ class FMP(object):
             fn += '&limit={limit}'.format(limit=limit)
 
         if datatype == 'csv':
-            fn += '&datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8'))).set_index('date').T
+            return pd.DataFrame(self._endpoint_wrapper(fn).json()).set_index(['cik', 'calendarYear', 'period'])
         else:
             return self._endpoint_wrapper(fn).json()     
 
@@ -118,9 +114,7 @@ class FMP(object):
             fn += '&limit={limit}'.format(limit=limit)
 
         if datatype == 'csv':
-            fn += '&datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8'))).set_index('date').T
+            return pd.DataFrame(self._endpoint_wrapper(fn).json()).set_index(['cik', 'calendarYear', 'period'])
         else:
             return self._endpoint_wrapper(fn).json()
         
@@ -183,9 +177,7 @@ class FMP(object):
             fn += '&limit={limit}'.format(limit=limit)
 
         if datatype == 'csv':
-            fn += '&datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8'))).set_index('date').T
+            return pd.DataFrame(self._endpoint_wrapper(fn).json())
         else:
             return self._endpoint_wrapper(fn).json()
         
@@ -202,9 +194,7 @@ class FMP(object):
             fn += '&limit={limit}'.format(limit=limit)
 
         if datatype == 'csv':
-            fn += '&datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8'))).set_index('date').T
+            return pd.DataFrame(self._endpoint_wrapper(fn).json())
         else:
             return self._endpoint_wrapper(fn).json()
         
@@ -221,9 +211,7 @@ class FMP(object):
             fn += '&limit={limit}'.format(limit=limit)
 
         if datatype == 'csv':
-            fn += '&datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8'))).set_index('date').T
+            return pd.DataFrame(self._endpoint_wrapper(fn).json())
         else:
             return self._endpoint_wrapper(fn).json()
         
