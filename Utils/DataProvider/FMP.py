@@ -3,14 +3,19 @@ import mysql.connector
 import requests
 import pandas as pd
 import datetime
-import io
+import time
 
 class FMP(object):
 
     def __init__(self) -> None:
 
         self.api_key = None
+
         self.max_try = 5
+        self._api_call_limit_per_minute = 700
+        self.api_call_ct = self._api_call_limit_per_minute
+        self.worker_ct = 25
+        self.sleep_time = 60 # seconds
 
         cnx = mysql.connector.connect(**mysql_config)
         cursor = cnx.cursor()
@@ -25,6 +30,9 @@ class FMP(object):
             print('FMP Connection Established')
         except:
             print("FMP Connection Failed")
+
+    # def _multi_thread_endpoint_wrapper(self, function_list):
+
 
     def _endpoint_wrapper(self, fn):
         url = 'https://financialmodelingprep.com{functionString}'.format(functionString=fn)
@@ -48,8 +56,13 @@ class FMP(object):
         if try_ct == 0:
             raise Exception("Error - Max Try Reached")
         
+        if self.api_call_ct == 0:
+            time.sleep(self.sleep_time)
+            self.api_call_ct = self._api_call_limit_per_minute
+        
         try:
             r = requests.get(url)
+            self.api_call_ct -= 1
             self._validate_response(r)
         except:
             r = self._FMP_api_call(url, try_ct-1)
@@ -594,6 +607,14 @@ class FMP(object):
 
         return self._endpoint_wrapper(fn).json() 
     
+    def Company_Core_Information(self, symbol, datatype=None):
+        fn = '/api/v4/company-core-information?symbol={symbol}'.format(symbol = symbol)
+
+        if datatype == 'csv':
+            return pd.DataFrame(self._endpoint_wrapper(fn).json())
+        
+        return self._endpoint_wrapper(fn).json() 
+    
 ######################################################################################################
 #################################  Stock News   ######################################################
 ######################################################################################################
@@ -926,9 +947,7 @@ class FMP(object):
         fn = '/api/v3/sp500_constituent?'
 
         if datatype=='csv':
-            fn += 'datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8')))
+            return pd.DataFrame(self._endpoint_wrapper(fn).json())
         else:
             return self._endpoint_wrapper(fn).json() 
         
@@ -942,9 +961,7 @@ class FMP(object):
         fn = '/api/v3/nasdaq_constituent?'
 
         if datatype=='csv':
-            fn += 'datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8')))
+            return pd.DataFrame(self._endpoint_wrapper(fn).json())
         else:
             return self._endpoint_wrapper(fn).json() 
         
@@ -957,9 +974,7 @@ class FMP(object):
         fn = '/api/v3/dowjones_constituent?'
 
         if datatype=='csv':
-            fn += 'datatype={datatype}'.format(datatype=datatype)
-            r = self._endpoint_wrapper(fn)
-            return pd.read_csv(io.StringIO(r.content.decode('utf-8')))
+            return pd.DataFrame(self._endpoint_wrapper(fn).json())
         else:
             return self._endpoint_wrapper(fn).json() 
         

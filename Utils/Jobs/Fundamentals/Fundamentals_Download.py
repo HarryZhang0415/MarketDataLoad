@@ -2,6 +2,23 @@ from Utils.DataProvider.FMP import FMP
 from Utils.SQLAlchemy.Fundamentals import *
 from sqlalchemy import create_engine
 from fundamentals_config import *
+import pandas as pd
+import numpy as np
+
+def Download_Universe(engine, data_vendor, datatype):
+    sp500_cons_df = data_vendor.Sp500_Constituents(datatype)
+    nasdaq_100_df = data_vendor.Nasdaq_100(datatype)
+    dj_cons_df = data_vendor.DJ_Constituents(datatype)
+    universe = pd.concat([sp500_cons_df, nasdaq_100_df, dj_cons_df], axis=0).drop_duplicates(subset=['cik']).set_index('cik')
+
+    # Define the DataFrame and the table name
+    table_name = Universe.__tablename__
+
+    columns = [col for col in fmp_column_mapping_universe.values() if col in universe.columns]
+
+    universe = universe[columns].replace(r'^\s*$', np.nan, regex=True)
+    universe.to_sql(name=table_name, con=engine, if_exists='append', index=True)
+
 
 
 def Download_Income_Statement(engine, data_vendor, symbol, period, datatype, limit):
@@ -61,7 +78,8 @@ if __name__ == '__main__':
     engine = create_engine(url_object)
     data_vendor = FMP()
 
+    Download_Universe(engine, data_vendor, datatype)
     # Download_Income_Statement(engine, data_vendor, symbol, period, datatype, limit)
     # Download_Balance_Sheet(engine, data_vendor, symbol, period, datatype, limit)
-    Download_Cashflow_Statement(engine, data_vendor, symbol, period, datatype, limit)
-
+    # Download_Cashflow_Statement(engine, data_vendor, symbol, period, datatype, limit)
+    
