@@ -1,4 +1,4 @@
 from Utils.SQLAlchemy.Fundamentals.BalanceSheet import *
 from Utils.SQLAlchemy.Fundamentals.IncomeStatement import *
 from Utils.SQLAlchemy.Fundamentals.CashflowStatement import *
-from Utils.SQLAlchemy.Fundamentals.Universe import *
+from Utils.SQLAlchemy.Fundamentals.CompanyInfo import *

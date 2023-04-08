@@ -1,0 +1,22 @@
+CREATE TABLE Company_Info (
+    ID INT NOT NULL AUTO_INCREMENT,
+    cik INT NOT NULL,
+    symbol VARCHAR(20),
+    name VARCHAR(200),
+    sicDescription VARCHAR(255),
+    sicGroup VARCHAR(200),
+    sicCode INT,
+    sector VARCHAR(100),
+    subSector VARCHAR(200),
+    exchange VARCHAR(20),
+    headQuarter VARCHAR(200),
+    stateLocation VARCHAR(5),
+    stateOfIncorporation VARCHAR(5),
+    fiscalYearEnd VARCHAR(5),
+    businessAddress VARCHAR(200),
+    mailingAddress VARCHAR(200),
+    taxIdentificationNumber VARCHAR(20),
+    registrantName VARCHAR(200),
+    KEY(ID),
+    PRIMARY KEY (cik)
+);
