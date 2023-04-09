@@ -1,5 +1,6 @@
 from Utils.DataProvider.FMP import FMP
 from Utils.SQLAlchemy.Fundamentals import *
+from Utils.SQLAlchemy import format_dataframe
 from sqlalchemy import create_engine, URL
 import pandas as pd
 import numpy as np
@@ -17,7 +18,7 @@ def Download_Company_Info(engine, data_vendor, datatype):
     sp500_cons_df = data_vendor.Sp500_Constituents(datatype)
     nasdaq_100_df = data_vendor.Nasdaq_100(datatype)
     dj_cons_df = data_vendor.DJ_Constituents(datatype)
-    universe = pd.concat([sp500_cons_df, nasdaq_100_df, dj_cons_df], axis=0).drop_duplicates(subset=['cik']).set_index('cik')
+    universe = pd.concat([sp500_cons_df, nasdaq_100_df, dj_cons_df], axis=0).drop_duplicates(subset=table.primary_key).set_index(table.primary_key)
 
     logging.info("Universe Downloaded")
 
@@ -42,12 +43,15 @@ def Download_Company_Info(engine, data_vendor, datatype):
     columns = [col for col in table.fmp_column_mapping.values() if col in Company_Info.columns]
 
     Company_Info = Company_Info[columns].replace(r'^\s*$', np.nan, regex=True)
+    dtype_map = {col.name: col.type for col in table.__table__.columns}
+
+    df_agg = format_dataframe(Company_Info, dtype_map)
     logging.info("Start Inserting Data Into Database")
-    # Company_Info.to_sql(name=table.__tablename__, con=engine, if_exists='append', index=True)
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=True)
 
     logging.info("Finished")
 
-    return Company_Info['symbol']
+    return df_agg['symbol']
 
 
 def Download_Income_Statement(engine, data_vendor, symbol_list, period, datatype, limit):
@@ -69,13 +73,16 @@ def Download_Income_Statement(engine, data_vendor, symbol_list, period, datatype
         tmp_df = pd.DataFrame(r)
         df_agg = pd.concat([df_agg, tmp_df])
 
-    df_agg = df_agg.dropna(subset=table.primary_key).drop_duplicates(subset=table.primary_key).set_index(table.primary_key)
-
     columns = [col for col in table.fmp_column_mapping.values() if col in df_agg.columns]
+    df_agg = df_agg[columns].dropna(subset=table.primary_key).drop_duplicates(subset=table.primary_key)
+
+    dtype_map = {col.name: col.type for col in table.__table__.columns}
+
+    df_agg = format_dataframe(df_agg, dtype_map)   
 
     logging.info("Insert Into Database - Table Name %s" % table.__tablename__)
     # Write the DataFrame to the SQL table, mapping the columns
-    # df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=True)
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=False)
 
 
 def Download_Balance_Sheet(engine, data_vendor, symbol, period, datatype, limit):
@@ -96,13 +103,16 @@ def Download_Balance_Sheet(engine, data_vendor, symbol, period, datatype, limit)
         tmp_df = pd.DataFrame(r)
         df_agg = pd.concat([df_agg, tmp_df])
 
-    df_agg = df_agg.dropna(subset=table.primary_key).drop_duplicates(subset=table.primary_key).set_index(table.primary_key)
-
     columns = [col for col in table.fmp_column_mapping.values() if col in df_agg.columns]
+    df_agg = df_agg[columns].dropna(subset=table.primary_key).drop_duplicates(subset=table.primary_key)
+
+    dtype_map = {col.name: col.type for col in table.__table__.columns}
+
+    df_agg = format_dataframe(df_agg, dtype_map)
 
     logging.info("Insert Into Database - Table Name %s" % table.__tablename__)
     # Write the DataFrame to the SQL table, mapping the columns
-    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=True)
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=False)
 
 
 def Download_Cashflow_Statement(engine, data_vendor, symbol, period, datatype, limit):
@@ -123,14 +133,16 @@ def Download_Cashflow_Statement(engine, data_vendor, symbol, period, datatype, l
         tmp_df = pd.DataFrame(r)
         df_agg = pd.concat([df_agg, tmp_df])
 
-    df_agg = df_agg.dropna(subset=table.primary_key).drop_duplicates(subset=table.primary_key).set_index(table.primary_key)
-
     columns = [col for col in table.fmp_column_mapping.values() if col in df_agg.columns]
+    df_agg = df_agg.dropna(subset=table.primary_key).drop_duplicates(subset=table.primary_key)
+
+    dtype_map = {col.name: col.type for col in table.__table__.columns}
+
+    df_agg = format_dataframe(df_agg, dtype_map)
 
     logging.info("Insert Into Database - Table Name %s" % table.__tablename__)
     # Write the DataFrame to the SQL table, mapping the columns
-    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=True)
-
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=False)
 
 if __name__ == '__main__':
 
@@ -151,9 +163,6 @@ if __name__ == '__main__':
     datatype = 'csv' ## return pandas dataframe
     period = 'quarter' # 'quarter' 'annual'
     limit = 120
-
-    symbol = 'AAPL'
-
     database = 'fundamentals'
 
     url_object = URL.create(
@@ -173,7 +182,7 @@ if __name__ == '__main__':
     logging.info("Start Download Company Info")
     symbol_list = Download_Company_Info(engine, data_vendor, datatype)
 
-    # Download_Income_Statement(engine, data_vendor, symbol_list, period, datatype, limit)
+    Download_Income_Statement(engine, data_vendor, symbol_list, period, datatype, limit)
     Download_Balance_Sheet(engine, data_vendor, symbol_list, period, datatype, limit)
     Download_Cashflow_Statement(engine, data_vendor, symbol_list, period, datatype, limit)
     
