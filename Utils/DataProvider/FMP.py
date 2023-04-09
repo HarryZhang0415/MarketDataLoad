@@ -6,7 +6,6 @@ import datetime
 import time
 import threading
 from Utils.DataProvider.APICaller import *
-from Utils.LoggingService import LoggingService
 import os
 import logging
 
@@ -22,8 +21,6 @@ class FMP(object):
         self._worker_ct = 25
         self._sleep_time = 60 # seconds
 
-        self.logger = LoggingService('FMP')
-
         cnx = mysql.connector.connect(**mysql_config)
         cursor = cnx.cursor()
         cursor.execute(api_key_sql, [FMP.__name__, FMP.__name__])
@@ -34,17 +31,17 @@ class FMP(object):
         try: 
             url = 'https://site.financialmodelingprep.com/developer/docs'
             request = requests.get(url, timeout=5)
-            print('FMP Connection Established')
+            logging.info('FMP Connection Established')
         except:
-            print("FMP Connection Failed")
+            logging.error("FMP Connection Failed")
 
     
     def multi_thread_endpoint_wrapper(self, function_list):
-        self.logger.info("Initialize The APICaller Class For Multi Threading")
+        logging.info("Initialize The APICaller Class For Multi Threading")
         Caller = APICaller(self._max_try, self._sleep_time, self._api_call_limit_per_minute)
         results = Caller.call_api_in_parallel(function_list)
 
-        self.logger.info("Finished. Return Restuls.")
+        logging.info("Finished. Return Restuls.")
         return results
     
     def _add_api_key(self, fn):

@@ -23,5 +23,5 @@ CREATE TABLE Income_Statement (
   incomeTaxExpense DECIMAL(20,4),
   netIncome DECIMAL(20,4),
   KEY(ID),
-  PRIMARY KEY (cik, calendarYear, period, ID)
+  PRIMARY KEY (cik, calendarYear, period)
 );

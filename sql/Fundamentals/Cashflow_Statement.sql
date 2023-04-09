@@ -34,5 +34,5 @@ CREATE TABLE Cashflow_Statement (
     capitalExpenditure DECIMAL(20,4),
     freeCashFlow DECIMAL(20,4),
     KEY(ID),
-    PRIMARY KEY (cik, calendarYear, period, ID)
+    PRIMARY KEY (cik, calendarYear, period)
 );

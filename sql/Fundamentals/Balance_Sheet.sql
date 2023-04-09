@@ -48,5 +48,5 @@ CREATE TABLE Balance_Sheet (
   totalDebt DECIMAL(20,4),
   netDebt DECIMAL(20,4),
   KEY(ID),
-  PRIMARY KEY (ID, cik, calendarYear, period)
+  PRIMARY KEY (cik, calendarYear, period)
 );

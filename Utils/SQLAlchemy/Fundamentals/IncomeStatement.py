@@ -1,40 +1,15 @@
 from sqlalchemy import create_engine, Column, Integer, String, Numeric
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.inspection import inspect
 
 # engine = create_engine('mysql://username:password@host/database_name')
-
-fmp_column_mapping_incomestatement = {
-# Columns of the table in database : Columns of the dataframe generated from FMP.
-  'cik': 'cik',
-  'calendarYear': 'calendarYear',
-  'period' : 'period',
-  'revenue' : 'revenue',
-  'costOfRevenue' : 'costOfRevenue' ,
-  'grossProfit' : 'grossProfit' ,
-  'researchAndDevelopmentExpenses' : 'researchAndDevelopmentExpenses',
-  'generalAndAdministrativeExpenses' : 'generalAndAdministrativeExpenses' ,
-  'sellingAndMarketingExpenses' : 'sellingAndMarketingExpenses' ,
-  'sellingGeneralAndAdministrativeExpenses' : 'sellingGeneralAndAdministrativeExpenses' ,
-  'otherExpenses' : 'otherExpenses' ,
-  'operatingExpenses' : 'operatingExpenses' ,
-  'costAndExpenses' : 'costAndExpenses', 
-  'interestIncome' : 'interestIncome',
-  'interestExpense' : 'interestExpense',
-  'depreciationAndAmortization' : 'depreciationAndAmortization',
-  'ebitda' : 'ebitda',
-  'operatingIncome' : 'operatingIncome',
-  'totalOtherIncomeExpensesNet' : 'totalOtherIncomeExpensesNet',
-  'incomeBeforeTax' : 'incomeBeforeTax',
-  'incomeTaxExpense' : 'incomeTaxExpense',
-  'netIncome' : 'netIncome'
-}
 
 Base = declarative_base()
 
 class IncomeStatement(Base):
     __tablename__ = 'income_statement'
     
-    ID = Column(Integer, primary_key=True, autoincrement=True)
+    ID = Column(Integer, autoincrement=True)
     cik = Column(Integer, primary_key=True, nullable=False)
     calendarYear = Column(String(5), primary_key=True, nullable=False)
     period = Column(String(5), primary_key=True, nullable=False)
@@ -57,3 +32,33 @@ class IncomeStatement(Base):
     incomeBeforeTax = Column(Numeric(20, 4))     
     incomeTaxExpense = Column(Numeric(20, 4))
     netIncome = Column(Numeric(20, 4))
+
+    fmp_column_mapping = {
+    # Columns of the table in database : Columns of the dataframe generated from FMP.
+      'cik': 'cik',
+      'calendarYear': 'calendarYear',
+      'period' : 'period',
+      'revenue' : 'revenue',
+      'costOfRevenue' : 'costOfRevenue' ,
+      'grossProfit' : 'grossProfit' ,
+      'researchAndDevelopmentExpenses' : 'researchAndDevelopmentExpenses',
+      'generalAndAdministrativeExpenses' : 'generalAndAdministrativeExpenses' ,
+      'sellingAndMarketingExpenses' : 'sellingAndMarketingExpenses' ,
+      'sellingGeneralAndAdministrativeExpenses' : 'sellingGeneralAndAdministrativeExpenses' ,
+      'otherExpenses' : 'otherExpenses' ,
+      'operatingExpenses' : 'operatingExpenses' ,
+      'costAndExpenses' : 'costAndExpenses', 
+      'interestIncome' : 'interestIncome',
+      'interestExpense' : 'interestExpense',
+      'depreciationAndAmortization' : 'depreciationAndAmortization',
+      'ebitda' : 'ebitda',
+      'operatingIncome' : 'operatingIncome',
+      'totalOtherIncomeExpensesNet' : 'totalOtherIncomeExpensesNet',
+      'incomeBeforeTax' : 'incomeBeforeTax',
+      'incomeTaxExpense' : 'incomeTaxExpense',
+      'netIncome' : 'netIncome'
+    }
+    
+    @property
+    def primary_key(self):
+        return [key.name for key in inspect(__class__).primary_key]

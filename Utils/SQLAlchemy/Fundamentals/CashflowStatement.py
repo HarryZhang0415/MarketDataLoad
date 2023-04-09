@@ -2,52 +2,14 @@
 
 from sqlalchemy import Column, Integer, String, DECIMAL
 from sqlalchemy.ext.declarative import declarative_base
-
-# Columns of the table in database : Columns of the dataframe generated from FMP.
-fmp_column_mapping_cashflowstatement = {
-    'cik': 'cik',
-    'calendarYear': 'calendarYear',
-    'period': 'period',
-    'netIncome': 'netIncome',
-    'depreciationAndAmortization': 'depreciationAndAmortization',
-    'deferredIncomeTax': 'deferredIncomeTax',
-    'stockBasedCompensation': 'stockBasedCompensation',
-    'changeInWorkingCapital': 'changeInWorkingCapital',
-    'accountsReceivables': 'accountsReceivables',
-    'inventory': 'inventory',
-    'accountsPayables': 'accountsPayables',
-    'otherWorkingCapital': 'otherWorkingCapital',
-    'otherNonCashItems': 'otherNonCashItems',
-    'netCashProvidedByOperatingActivities': 'netCashProvidedByOperatingActivities',
-    'investmentsInPropertyPlantAndEquipment': 'investmentsInPropertyPlantAndEquipment',
-    'acquisitionsNet': 'acquisitionsNet',
-    'purchasesOfInvestments': 'purchasesOfInvestments',
-    'salesMaturitiesOfInvestments': 'salesMaturitiesOfInvestments',
-    'otherInvestingActivites': 'otherInvestingActivites',
-    'netCashUsedForInvestingActivites': 'netCashUsedForInvestingActivites',
-    'debtRepayment': 'debtRepayment',
-    'commonStockIssued': 'commonStockIssued',
-    'commonStockRepurchased': 'commonStockRepurchased',
-    'dividendsPaid': 'dividendsPaid',
-    'otherFinancingActivites': 'otherFinancingActivites',
-    'netCashUsedProvidedByFinancingActivities': 'netCashUsedProvidedByFinancingActivities',
-    'effectOfForexChangesOnCash': 'effectOfForexChangesOnCash',
-    'netChangeInCash': 'netChangeInCash',
-    'cashAtEndOfPeriod': 'cashAtEndOfPeriod',
-    'cashAtBeginningOfPeriod': 'cashAtBeginningOfPeriod',
-    'operatingCashFlow': 'operatingCashFlow',
-    'capitalExpenditure': 'capitalExpenditure',
-    'freeCashFlow': 'freeCashFlow'
-}
-
-
+from sqlalchemy.inspection import inspect
 
 Base = declarative_base()
 
 class CashflowStatement(Base):
     __tablename__ = 'cashflow_statement'
 
-    ID = Column(Integer, primary_key=True, autoincrement=True)
+    ID = Column(Integer, autoincrement=True)
     cik = Column(Integer, nullable=False, primary_key=True)
     calendarYear = Column(String(5), nullable=False, primary_key=True)
     period = Column(String(5), nullable=False, primary_key=True)
@@ -81,3 +43,44 @@ class CashflowStatement(Base):
     operatingCashFlow = Column(DECIMAL(20,4))
     capitalExpenditure = Column(DECIMAL(20,4))
     freeCashFlow = Column(DECIMAL(20,4))
+
+    # Columns of the table in database : Columns of the dataframe generated from FMP.
+    fmp_column_mapping = {
+        'cik': 'cik',
+        'calendarYear': 'calendarYear',
+        'period': 'period',
+        'netIncome': 'netIncome',
+        'depreciationAndAmortization': 'depreciationAndAmortization',
+        'deferredIncomeTax': 'deferredIncomeTax',
+        'stockBasedCompensation': 'stockBasedCompensation',
+        'changeInWorkingCapital': 'changeInWorkingCapital',
+        'accountsReceivables': 'accountsReceivables',
+        'inventory': 'inventory',
+        'accountsPayables': 'accountsPayables',
+        'otherWorkingCapital': 'otherWorkingCapital',
+        'otherNonCashItems': 'otherNonCashItems',
+        'netCashProvidedByOperatingActivities': 'netCashProvidedByOperatingActivities',
+        'investmentsInPropertyPlantAndEquipment': 'investmentsInPropertyPlantAndEquipment',
+        'acquisitionsNet': 'acquisitionsNet',
+        'purchasesOfInvestments': 'purchasesOfInvestments',
+        'salesMaturitiesOfInvestments': 'salesMaturitiesOfInvestments',
+        'otherInvestingActivites': 'otherInvestingActivites',
+        'netCashUsedForInvestingActivites': 'netCashUsedForInvestingActivites',
+        'debtRepayment': 'debtRepayment',
+        'commonStockIssued': 'commonStockIssued',
+        'commonStockRepurchased': 'commonStockRepurchased',
+        'dividendsPaid': 'dividendsPaid',
+        'otherFinancingActivites': 'otherFinancingActivites',
+        'netCashUsedProvidedByFinancingActivities': 'netCashUsedProvidedByFinancingActivities',
+        'effectOfForexChangesOnCash': 'effectOfForexChangesOnCash',
+        'netChangeInCash': 'netChangeInCash',
+        'cashAtEndOfPeriod': 'cashAtEndOfPeriod',
+        'cashAtBeginningOfPeriod': 'cashAtBeginningOfPeriod',
+        'operatingCashFlow': 'operatingCashFlow',
+        'capitalExpenditure': 'capitalExpenditure',
+        'freeCashFlow': 'freeCashFlow'
+    }
+
+    @property
+    def primary_key(self):
+        return [key.name for key in inspect(__class__).primary_key]

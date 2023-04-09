@@ -1,64 +1,12 @@
 from sqlalchemy import Column, Integer, String, Numeric
 from sqlalchemy.ext.declarative import declarative_base
-
-
-# Columns of the table in database : Columns of the dataframe generated from FMP.
-fmp_column_mapping_balancesheet = {
-    'cik': 'cik',
-    'calendarYear': 'calendarYear',
-    'period': 'period',
-    'cashAndCashEquivalents': 'cashAndCashEquivalents',
-    'shortTermInvestments': 'shortTermInvestments',
-    'cashAndShortTermInvestments': 'cashAndShortTermInvestments',
-    'netReceivables': 'netReceivables',
-    'inventory': 'inventory',
-    'otherCurrentAssets': 'otherCurrentAssets',
-    'totalCurrentAssets': 'totalCurrentAssets',
-    'propertyPlantEquipmentNet': 'propertyPlantEquipmentNet',
-    'goodwill': 'goodwill',
-    'intangibleAssets': 'intangibleAssets',
-    'goodwillAndIntangibleAssets': 'goodwillAndIntangibleAssets',
-    'longTermInvestments': 'longTermInvestments',
-    'taxAssets': 'taxAssets',
-    'otherNonCurrentAssets': 'otherNonCurrentAssets',
-    'totalNonCurrentAssets': 'totalNonCurrentAssets',
-    'otherAssets': 'otherAssets',
-    'totalAssets': 'totalAssets',
-    'accountPayables': 'accountPayables',
-    'shortTermDebt': 'shortTermDebt',
-    'taxPayables': 'taxPayables',
-    'deferredRevenue': 'deferredRevenue',
-    'otherCurrentLiabilities': 'otherCurrentLiabilities',
-    'totalCurrentLiabilities': 'totalCurrentLiabilities',
-    'longTermDebt': 'longTermDebt',
-    'deferredRevenueNonCurrent': 'deferredRevenueNonCurrent',
-    'deferredTaxLiabilitiesNonCurrent': 'deferredTaxLiabilitiesNonCurrent',
-    'otherNonCurrentLiabilities': 'otherNonCurrentLiabilities',
-    'totalNonCurrentLiabilities': 'totalNonCurrentLiabilities',
-    'otherLiabilities': 'otherLiabilities',
-    'capitalLeaseObligations': 'capitalLeaseObligations',
-    'totalLiabilities': 'totalLiabilities',
-    'preferredStock': 'preferredStock',
-    'commonStock': 'commonStock',
-    'retainedEarnings': 'retainedEarnings',
-    'accumulatedOtherComprehensiveIncomeLoss': 'accumulatedOtherComprehensiveIncomeLoss',
-    'othertotalStockholdersEquity': 'othertotalStockholdersEquity',
-    'totalStockholdersEquity': 'totalStockholdersEquity',
-    'totalEquity': 'totalEquity',
-    'totalLiabilitiesAndStockholdersEquity': 'totalLiabilitiesAndStockholdersEquity',
-    'minorityInterest': 'minorityInterest',
-    'totalLiabilitiesAndTotalEquity': 'totalLiabilitiesAndTotalEquity',
-    'totalInvestments': 'totalInvestments',
-    'totalDebt': 'totalDebt',
-    'netDebt': 'netDebt'
-}
-
+from sqlalchemy.inspection import inspect
 
 Base = declarative_base()
 
 class BalanceSheet(Base):
     __tablename__ = 'balance_sheet'
-    ID = Column(Integer, autoincrement=True, primary_key=True)
+    ID = Column(Integer, autoincrement=True)
     cik = Column(Integer, nullable=False, primary_key=True)
     calendarYear = Column(String(5), nullable=False, primary_key=True)
     period = Column(String(5), nullable=False, primary_key=True)
@@ -106,3 +54,58 @@ class BalanceSheet(Base):
     totalInvestments = Column(Numeric(20, 4))
     totalDebt = Column(Numeric(20, 4))
     netDebt = Column(Numeric(20, 4))
+
+    # Columns of the table in database : Columns of the dataframe generated from FMP.
+    fmp_column_mapping = {
+    'cik': 'cik',
+    'calendarYear': 'calendarYear',
+    'period': 'period',
+    'cashAndCashEquivalents': 'cashAndCashEquivalents',
+    'shortTermInvestments': 'shortTermInvestments',
+    'cashAndShortTermInvestments': 'cashAndShortTermInvestments',
+    'netReceivables': 'netReceivables',
+    'inventory': 'inventory',
+    'otherCurrentAssets': 'otherCurrentAssets',
+    'totalCurrentAssets': 'totalCurrentAssets',
+    'propertyPlantEquipmentNet': 'propertyPlantEquipmentNet',
+    'goodwill': 'goodwill',
+    'intangibleAssets': 'intangibleAssets',
+    'goodwillAndIntangibleAssets': 'goodwillAndIntangibleAssets',
+    'longTermInvestments': 'longTermInvestments',
+    'taxAssets': 'taxAssets',
+    'otherNonCurrentAssets': 'otherNonCurrentAssets',
+    'totalNonCurrentAssets': 'totalNonCurrentAssets',
+    'otherAssets': 'otherAssets',
+    'totalAssets': 'totalAssets',
+    'accountPayables': 'accountPayables',
+    'shortTermDebt': 'shortTermDebt',
+    'taxPayables': 'taxPayables',
+    'deferredRevenue': 'deferredRevenue',
+    'otherCurrentLiabilities': 'otherCurrentLiabilities',
+    'totalCurrentLiabilities': 'totalCurrentLiabilities',
+    'longTermDebt': 'longTermDebt',
+    'deferredRevenueNonCurrent': 'deferredRevenueNonCurrent',
+    'deferredTaxLiabilitiesNonCurrent': 'deferredTaxLiabilitiesNonCurrent',
+    'otherNonCurrentLiabilities': 'otherNonCurrentLiabilities',
+    'totalNonCurrentLiabilities': 'totalNonCurrentLiabilities',
+    'otherLiabilities': 'otherLiabilities',
+    'capitalLeaseObligations': 'capitalLeaseObligations',
+    'totalLiabilities': 'totalLiabilities',
+    'preferredStock': 'preferredStock',
+    'commonStock': 'commonStock',
+    'retainedEarnings': 'retainedEarnings',
+    'accumulatedOtherComprehensiveIncomeLoss': 'accumulatedOtherComprehensiveIncomeLoss',
+    'othertotalStockholdersEquity': 'othertotalStockholdersEquity',
+    'totalStockholdersEquity': 'totalStockholdersEquity',
+    'totalEquity': 'totalEquity',
+    'totalLiabilitiesAndStockholdersEquity': 'totalLiabilitiesAndStockholdersEquity',
+    'minorityInterest': 'minorityInterest',
+    'totalLiabilitiesAndTotalEquity': 'totalLiabilitiesAndTotalEquity',
+    'totalInvestments': 'totalInvestments',
+    'totalDebt': 'totalDebt',
+    'netDebt': 'netDebt'
+    }   
+
+    @property
+    def primary_key(self):
+        return [key.name for key in inspect(__class__).primary_key]
