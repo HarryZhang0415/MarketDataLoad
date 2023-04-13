@@ -10,10 +10,9 @@ load_dotenv()
 # Columns of the table in database : Columns of the dataframe generated from FMP.
 Base = declarative_base()
 
-class CompanyInfo(Base):
+class CompanyInfo_Staging(Base):
     __tablename__ = 'company_info'
 
-    ID = Column(Integer, autoincrement=True)
     cik = Column(Integer, primary_key=True, nullable=False)
     symbol = Column(String(20))
     name = Column(String(200))
@@ -55,26 +54,3 @@ class CompanyInfo(Base):
     @property
     def primary_key(self):
         return [key.name for key in inspect(__class__).primary_key]
-    
-    def get_all_record_from_db(self):
-        connector = os.getenv('database_connector')
-        username = os.getenv('database_username')
-        password = os.getenv('database_password')
-        host = os.getenv('database_host')
-        database = 'fundamentals'
-
-        url_object = URL.create(
-        connector,
-        username=username,
-        password=password,
-        host=host,
-        database=database,
-            )
-
-        engine = create_engine(url_object)
-
-        with Session(engine) as session:
-            statement = select(__class__)
-            records = session.execute(statement).all()
-
-        return records

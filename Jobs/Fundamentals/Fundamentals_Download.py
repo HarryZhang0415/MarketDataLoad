@@ -1,5 +1,5 @@
 from Utils.DataProvider.FMP import FMP
-from Utils.SQLAlchemy.Fundamentals import *
+from Utils.SQLAlchemy.Fundamentals_Staging import *
 from Utils.SQLAlchemy import format_dataframe
 from sqlalchemy import create_engine, URL
 import pandas as pd
@@ -12,7 +12,7 @@ import sys
 load_dotenv()
 
 def Download_Company_Info(engine, data_vendor, datatype):
-    table = CompanyInfo()
+    table = CompanyInfo_Staging()
 
     logging.info("Get constituents company list from DJ/SP/NQ")
     sp500_cons_df = data_vendor.Sp500_Constituents(datatype)
@@ -45,9 +45,9 @@ def Download_Company_Info(engine, data_vendor, datatype):
     Company_Info = Company_Info[columns].replace(r'^\s*$', np.nan, regex=True)
     dtype_map = {col.name: col.type for col in table.__table__.columns}
 
-    df_agg = format_dataframe(Company_Info, dtype_map)
+    df_agg = format_dataframe(Company_Info, dtype_map, format_index=True)
     logging.info("Start Inserting Data Into Database")
-    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=True)
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='replace', index=True)
 
     logging.info("Finished")
 
@@ -56,7 +56,7 @@ def Download_Company_Info(engine, data_vendor, datatype):
 
 def Download_Income_Statement(engine, data_vendor, symbol_list, period, datatype, limit):
 
-    table = IncomeStatement()
+    table = IncomeStatement_Staging()
 
     logging.info("Start Constructing API Call Urls")
     url_list = []
@@ -82,11 +82,11 @@ def Download_Income_Statement(engine, data_vendor, symbol_list, period, datatype
 
     logging.info("Insert Into Database - Table Name %s" % table.__tablename__)
     # Write the DataFrame to the SQL table, mapping the columns
-    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=False)
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='replace', index=False)
 
 
 def Download_Balance_Sheet(engine, data_vendor, symbol, period, datatype, limit):
-    table = BalanceSheet()
+    table = BalanceSheet_Staging()
 
     logging.info("Start Constructing API Call Urls")
     url_list = []
@@ -112,11 +112,11 @@ def Download_Balance_Sheet(engine, data_vendor, symbol, period, datatype, limit)
 
     logging.info("Insert Into Database - Table Name %s" % table.__tablename__)
     # Write the DataFrame to the SQL table, mapping the columns
-    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=False)
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='replace', index=False)
 
 
 def Download_Cashflow_Statement(engine, data_vendor, symbol, period, datatype, limit):
-    table = CashflowStatement()
+    table = CashflowStatement_Staging()
 
     logging.info("Start Constructing API Call Urls")
     url_list = []
@@ -142,7 +142,7 @@ def Download_Cashflow_Statement(engine, data_vendor, symbol, period, datatype, l
 
     logging.info("Insert Into Database - Table Name %s" % table.__tablename__)
     # Write the DataFrame to the SQL table, mapping the columns
-    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='append', index=False)
+    df_agg[columns].to_sql(name=table.__tablename__, con=engine, if_exists='replace', index=False)
 
 if __name__ == '__main__':
 
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     datatype = 'csv' ## return pandas dataframe
     period = 'quarter' # 'quarter' 'annual'
     limit = 120
-    database = 'fundamentals'
+    database = 'fundamentals_staging'
 
     url_object = URL.create(
         connector,

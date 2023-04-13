@@ -18,7 +18,7 @@ class FMP(object):
         self._max_try = 5
         self._api_call_limit_per_minute = 700
         self._api_call_ct = self._api_call_limit_per_minute
-        self._worker_ct = 25
+        self._worker_ct = 10
         self._sleep_time = 60 # seconds
 
         cnx = mysql.connector.connect(**mysql_config)
