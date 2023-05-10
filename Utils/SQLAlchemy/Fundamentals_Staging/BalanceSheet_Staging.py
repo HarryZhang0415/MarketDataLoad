@@ -5,7 +5,7 @@ from sqlalchemy.inspection import inspect
 Base = declarative_base()
 
 class BalanceSheet_Staging(Base):
-    __tablename__ = 'balance_sheet'
+    __tablename__ = 'balancesheet_staging'
     
     cik = Column(Integer, nullable=False, primary_key=True)
     calendarYear = Column(String(5), nullable=False, primary_key=True)

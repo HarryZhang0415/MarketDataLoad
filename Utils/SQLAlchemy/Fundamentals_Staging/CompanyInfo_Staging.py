@@ -11,7 +11,7 @@ load_dotenv()
 Base = declarative_base()
 
 class CompanyInfo_Staging(Base):
-    __tablename__ = 'company_info'
+    __tablename__ = 'companyinfo_staging'
 
     cik = Column(Integer, primary_key=True, nullable=False)
     symbol = Column(String(20))

@@ -7,7 +7,7 @@ from sqlalchemy.inspection import inspect
 Base = declarative_base()
 
 class IncomeStatement_Staging(Base):
-    __tablename__ = 'income_statement'
+    __tablename__ = 'incomestatement_staging'
     
     cik = Column(Integer, primary_key=True, nullable=False)
     calendarYear = Column(String(5), primary_key=True, nullable=False)
